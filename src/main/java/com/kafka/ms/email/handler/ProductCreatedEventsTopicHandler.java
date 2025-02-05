@@ -1,7 +1,6 @@
 package com.kafka.ms.email.handler;
 
 import com.kafka.ms.events.ProductCreatedEvent;
-import com.kafka.ms.events.ProductCreatedTestEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaHandler;
@@ -19,12 +18,5 @@ public class ProductCreatedEventsTopicHandler {
         logger.info("Received a new event title:" + productCreatedEvent.getTitle());
         logger.info("Received a new event price:" + productCreatedEvent.getPrice());
         logger.info("Received a new event quantity:" + productCreatedEvent.getQuantity());
-    }
-
-    @KafkaHandler
-    public void handle(ProductCreatedTestEvent productCreatedTestEvent){
-        logger.info("-------------------- Handling productCreatedTestEvent ---------------------------");
-        logger.info("Received a new event productId:" + productCreatedTestEvent.getProductId());
-        logger.info("Received a new event title:" + productCreatedTestEvent.getTitle());
     }
 }
