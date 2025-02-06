@@ -1,5 +1,7 @@
 package com.kafka.ms.email.handler;
 
+import com.kafka.ms.email.exception.NotRetryableException;
+import com.kafka.ms.email.exception.RetryableException;
 import com.kafka.ms.events.ProductCreatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,5 +20,16 @@ public class ProductCreatedEventsTopicHandler {
         logger.info("Received a new event title:" + productCreatedEvent.getTitle());
         logger.info("Received a new event price:" + productCreatedEvent.getPrice());
         logger.info("Received a new event quantity:" + productCreatedEvent.getQuantity());
+
+        //Add a logic if price is less than 0 stop retry message and publish to DLT
+        //This NotRetryableException.class is added in DefaultErrorHandler in KafkaConsumerConfiguration
+        //as long as NotRetryableException throws DefaultErrorHandler will publish DLT automatically
+        if(productCreatedEvent.getPrice() < 0){
+            logger.error("Price can't be less than 0 not point to retry the message. Publish message to DLT");
+            throw new NotRetryableException("Price can't be less than 0 not point to retry the message. Publish message to DLT");
+        }
+        logger.info("Retry the message for testing retryable exception");
+        throw new RetryableException("Retry the message for testing retryable exception");
+
     }
 }

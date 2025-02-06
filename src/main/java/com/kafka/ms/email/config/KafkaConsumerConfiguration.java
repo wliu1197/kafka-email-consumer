@@ -1,5 +1,7 @@
 package com.kafka.ms.email.config;
 
+import com.kafka.ms.email.exception.NotRetryableException;
+import com.kafka.ms.email.exception.RetryableException;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -17,6 +19,8 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.util.backoff.FixedBackOff;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,7 +76,16 @@ public class KafkaConsumerConfiguration {
                     ConsumerFactory<String,Object> consumerFactory,
                     KafkaTemplate<String,Object> kafkaTemplate){
         //configure
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate));
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate),
+                new FixedBackOff(5000,3));// if retryable exception throw then retry the message each 5 seconds for 3 times then DLT
+        // add NotRetryableException to errorHandler
+        // anywhere throws NotRetryableException will publish the message in Dead Letter Topic
+        // you can add multiple NotRetryableExcption separate by comma
+        // e.g we can add 5** HttpServerErrorException in which is also not retryable
+        errorHandler.addNotRetryableExceptions(NotRetryableException.class, HttpServerErrorException.class);
+        // Added retryable Exception to errorHandler so if those exceptions throws then retry message
+        errorHandler.addRetryableExceptions(RetryableException.class);
+
         ConcurrentKafkaListenerContainerFactory<String,Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         //consumer factory
         factory.setConsumerFactory(consumerFactory);
