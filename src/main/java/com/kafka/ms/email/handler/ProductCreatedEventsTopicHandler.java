@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 //@KafkaListener(topics="product-created-events-topic",groupId = "product-created-events-group")
 */
 @Component
+//@KafkaListener(topics = {"topic1" , "topic2"}) one consumer can listener to multiple topics
 @KafkaListener(topics="product-created-events-topic")
 public class ProductCreatedEventsTopicHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
