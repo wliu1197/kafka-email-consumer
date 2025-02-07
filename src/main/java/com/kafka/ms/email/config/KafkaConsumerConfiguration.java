@@ -44,6 +44,8 @@ public class KafkaConsumerConfiguration {
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,bootstrapServers);
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,keyDeserializer);
        // config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,valueDeserializer);
+
+        //configure consumer group here
         config.put(ConsumerConfig.GROUP_ID_CONFIG,groupId);
         config.put(JsonDeserializer.TRUSTED_PACKAGES,trustedPackage);
         // to Handler Deserializer error using bean config

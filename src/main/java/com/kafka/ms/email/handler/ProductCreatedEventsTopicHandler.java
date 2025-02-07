@@ -9,6 +9,12 @@ import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+/*
+  * we can use groupId in @KafkaListener to set consumer group when we have more than one instances
+  * or we can configure in @configuration class ConsumerFactory bean e.g:config.put(ConsumerConfig.GROUP_ID_CONFIG,groupId);
+
+//@KafkaListener(topics="product-created-events-topic",groupId = "product-created-events-group")
+*/
 @Component
 @KafkaListener(topics="product-created-events-topic")
 public class ProductCreatedEventsTopicHandler {
