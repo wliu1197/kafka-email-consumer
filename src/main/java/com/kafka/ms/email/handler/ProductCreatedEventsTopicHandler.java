@@ -7,6 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 /*
@@ -20,9 +23,14 @@ import org.springframework.stereotype.Component;
 @KafkaListener(topics="product-created-events-topic")
 public class ProductCreatedEventsTopicHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final boolean throwRetryableExe = false;
     @KafkaHandler
-    public void handle(ProductCreatedEvent productCreatedEvent){
+    public void handle(@Payload ProductCreatedEvent productCreatedEvent,
+                       @Header(value = "messageId",required = false) String messageId,
+                       @Header(KafkaHeaders.RECEIVED_KEY) String messageKey){
         logger.info("-------------------- Handling ProductCreatedEvent ---------------------------");
+        logger.info("Received a new event messageId:" +  messageId);
+        logger.info("Received a new event messageKey:" + messageKey);
         logger.info("Received a new event productid:" + productCreatedEvent.getProductId());
         logger.info("Received a new event title:" + productCreatedEvent.getTitle());
         logger.info("Received a new event price:" + productCreatedEvent.getPrice());
@@ -35,8 +43,10 @@ public class ProductCreatedEventsTopicHandler {
             logger.error("Price can't be less than 0 not point to retry the message. Publish message to DLT");
             throw new NotRetryableException("Price can't be less than 0 not point to retry the message. Publish message to DLT");
         }
-        logger.info("Retry the message for testing retryable exception");
-        throw new RetryableException("Retry the message for testing retryable exception");
 
+        if(throwRetryableExe) {
+            logger.info("Retry the message for testing retryable exception");
+            throw new RetryableException("Retry the message for testing retryable exception");
+        }
     }
 }
