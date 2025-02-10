@@ -37,6 +37,8 @@ public class KafkaConsumerConfiguration {
     private String groupId;
     @Value("${kafka.consumer.properties.spring.json.trusted.packages}")
     private String trustedPackage;
+    @Value("${kafka.consumer.isolation-level}")
+    private String isolationLevel;
 
     @Bean
     public ConsumerFactory<String,Object> consumerFactory(){
@@ -51,6 +53,9 @@ public class KafkaConsumerConfiguration {
         // to Handler Deserializer error using bean config
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS,JsonDeserializer.class);
+
+        //set consumer only read transaction committed messages in topic
+        config.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG,isolationLevel);
 
         return new DefaultKafkaConsumerFactory<>(config);
     }
