@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+  mysql-social-media:
+    image: mysql:latest
+    restart: always
+    container_name: kafka-demo-database
+    ports:
+      - 3306:3306
+    networks:
+      - springapimysql-net
+    environment:
+      MYSQL_DATABASE: kafka-demo-database
+      MYSQL_USER: kafka-demo-user
+      MYSQL_PASSWORD: dummypassword
+      MYSQL_ROOT_PASSWORD: dummypassword
+
+networks:
+  springapimysql-net:

@@ -48,4 +48,14 @@ public class ProductCreatedEvent {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
+
+    @Override
+    public String toString() {
+        return "ProductCreatedEvent{" +
+                "productId='" + productId + '\'' +
+                ", title='" + title + '\'' +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                '}';
+    }
 }

@@ -2,15 +2,23 @@ package com.kafka.ms.email.handler;
 
 import com.kafka.ms.email.exception.NotRetryableException;
 import com.kafka.ms.email.exception.RetryableException;
+import com.kafka.ms.email.model.ProcessedEventDetails;
+import com.kafka.ms.email.service.ProcessedEventAgent;
+import com.kafka.ms.email.service.ProcessedEventImpl;
 import com.kafka.ms.events.ProductCreatedEvent;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /*
   * we can use groupId in @KafkaListener to set consumer group when we have more than one instances
@@ -24,6 +32,14 @@ import org.springframework.stereotype.Component;
 public class ProductCreatedEventsTopicHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final boolean throwRetryableExe = false;
+
+    private ProcessedEventAgent processedEventAgent;
+    @Autowired
+    public ProductCreatedEventsTopicHandler(@Qualifier("ProcessedEventService") ProcessedEventAgent processedEventAgent) {
+        this.processedEventAgent = processedEventAgent;
+    }
+    // @Transactional apply DB transaction to this method
+    @Transactional
     @KafkaHandler
     public void handle(@Payload ProductCreatedEvent productCreatedEvent,
                        @Header(value = "messageId",required = false) String messageId,
@@ -42,6 +58,21 @@ public class ProductCreatedEventsTopicHandler {
         if(productCreatedEvent.getPrice() < 0){
             logger.error("Price can't be less than 0 not point to retry the message. Publish message to DLT");
             throw new NotRetryableException("Price can't be less than 0 not point to retry the message. Publish message to DLT");
+        }
+
+        ProcessedEventDetails processedEvents = processedEventAgent.findByMessageId(messageId);
+        // message not in db then store it
+        if(processedEvents == null){
+            ProcessedEventDetails processedEventDetails = new ProcessedEventDetails();
+            processedEventDetails.setProductId(productCreatedEvent.getProductId());
+            processedEventDetails.setMessageId(messageId);
+            processedEventDetails.setEvent(productCreatedEvent.toString());
+            processedEventAgent.saveEvent(processedEventDetails);
+            //todo: processing event logic here...do something...maybe send email and then producer message to a different topic
+        }else {
+            //if message has already processed then do nothing move message to DLT so it won't process again;
+            logger.info("Message has already been processed. Message Id:" + messageId + "publish it to DLT");
+            throw new NotRetryableException("Message has already been processed. Message Id:" + messageId + "publish it to DLT");
         }
 
         if(throwRetryableExe) {
